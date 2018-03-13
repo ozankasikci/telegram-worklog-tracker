@@ -1,0 +1,5 @@
+package telegrambot
+
+func Start() {
+
+}

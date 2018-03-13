@@ -8,7 +8,19 @@ import (
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/option"
 	"os"
+	"sync"
 )
+
+var firestoreClient *firestore.Client
+var once sync.Once
+
+// singleton firestore client
+func GetFirestoreClient(ctx context.Context) *firestore.Client {
+	once.Do(func() {
+		firestoreClient = newFirestoreClient(ctx)
+	})
+	return firestoreClient
+}
 
 func NewFirebaseAdminApp(ctx context.Context) *firebase.App {
 	pwd, _ := os.Getwd()
@@ -27,7 +39,7 @@ func NewFirebaseAdminApp(ctx context.Context) *firebase.App {
 	return app
 }
 
-func NewFirestoreClient(ctx context.Context) *firestore.Client {
+func newFirestoreClient(ctx context.Context) *firestore.Client {
 	firebaseAdmin := NewFirebaseAdminApp(ctx)
 
 	db, err := firebaseAdmin.Firestore(ctx)
