@@ -13,6 +13,8 @@ func main() {
 	db := firebase.GetFirestoreClient(ctx)
 	defer db.Close()
 
+	telegrambot.GetActivityManager()
+
 	done := make(chan bool)
 	<-done
 }

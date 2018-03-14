@@ -13,29 +13,28 @@ var workhourSnippet = `
 `
 
 func NewWorkLogsHandler() *Handler {
-	handler := &Handler{
-		Description: "hours handler",
-		Route:       "/hours",
-	}
-
-	function := func(ctx context.Context, m *tb.Message) {
-		db := firebase.GetFirestoreClient(ctx)
-		workLogsSnapshot, _ := db.Collection("work_logs").
-			Where("user_id", "==", m.Sender.ID).
-			Limit(20).
-			Documents(ctx).
-			GetAll()
-
+	function := func(ctx context.Context, h *Handler, m *tb.Message) {
 		response := ""
+		options := &firebase.WorkLogsOptions{Limit: 50, UserID: m.Sender.ID}
+		workLogsSnapshot, err := firebase.FetchWorkLogs(ctx, options)
+
+		if err != nil {
+			println(err)
+			return
+		}
 
 		for i := 0; i < len(workLogsSnapshot); i++ {
 			data := workLogsSnapshot[i].Data()
 			response = response + fmt.Sprintf(workhourSnippet, data["checkin_time"], data["checkout_time"])
 		}
 
-		handler.ResponseMessage = response
+		h.SetReponseMessage(response)
 	}
 
-	handler.Func = function
-	return handler
+	return &Handler{
+		Description: "Work Log handler",
+		Route:       "/work_log",
+		Func:        function,
+	}
+
 }

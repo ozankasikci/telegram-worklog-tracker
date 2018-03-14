@@ -1,5 +1,0 @@
-package telegrambot
-
-func Start() {
-
-}

@@ -8,8 +8,12 @@ import (
 type Handler struct {
 	Description     string
 	Route           string
-	Func            func(context.Context, *tb.Message)
+	Func            func(context.Context, *Handler, *tb.Message)
 	ResponseMessage string
+}
+
+func (h *Handler) SetReponseMessage(m string) {
+	h.ResponseMessage = m
 }
 
 func GetHandlers() []*Handler {
@@ -20,6 +24,7 @@ func GetHandlers() []*Handler {
 		NewCheckinHandler(),
 		NewCheckoutHandler(),
 		NewWorkLogsHandler(),
+		NewBalanceHandler(),
 	)
 
 	return handlers

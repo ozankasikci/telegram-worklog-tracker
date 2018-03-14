@@ -10,7 +10,7 @@ import (
 )
 
 func NewCheckoutHandler() *Handler {
-	function := func(ctx context.Context, m *tb.Message) {
+	function := func(ctx context.Context, h *Handler, m *tb.Message) {
 		db := firebase.GetFirestoreClient(ctx)
 
 		lastWorkLogSP, err := db.Collection("work_logs").
