@@ -7,6 +7,11 @@ import (
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
+var workhourSnippet = `
+*checkin:* %s
+*checkout:* %s
+`
+
 func NewWorkLogsHandler() *Handler {
 	handler := &Handler{
 		Description: "hours handler",
@@ -25,12 +30,9 @@ func NewWorkLogsHandler() *Handler {
 
 		for i := 0; i < len(workLogsSnapshot); i++ {
 			data := workLogsSnapshot[i].Data()
-			response = response + fmt.Sprintf("check in time: %v\n", data["checkin_time"])
-
-			if data["checkout_time"] != nil && data["checkout_time"] != "" {
-				response = response + fmt.Sprintf("check out time: %v\n", data["checkout_time"])
-			}
+			response = response + fmt.Sprintf(workhourSnippet, data["checkin_time"], data["checkout_time"])
 		}
+
 		handler.ResponseMessage = response
 	}
 

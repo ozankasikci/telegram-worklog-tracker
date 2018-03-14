@@ -34,6 +34,8 @@ func RegisterHandlers(ctx context.Context, b *tb.Bot) {
 		b.Handle(handler.Route, func(m *tb.Message) {
 			// before each request, ensure user saved
 			FindOrCreateUser(ctx, m)
+
+			// run handler logic
 			handler.Func(ctx, m)
 
 			response := handler.Description
@@ -41,7 +43,10 @@ func RegisterHandlers(ctx context.Context, b *tb.Bot) {
 				response = handler.ResponseMessage
 			}
 
-			b.Send(m.Sender, response)
+			options := &tb.SendOptions{
+				ParseMode: tb.ModeMarkdown,
+			}
+			b.Send(m.Sender, response, options)
 		})
 	}
 }
