@@ -29,7 +29,7 @@ func NewCheckinHandler() *Handler {
 			h.SetReponseMessage(fmt.Sprintf("Failed to checkin, err:%v", err))
 		}
 
-		GetActivityManager().Set(strconv.Itoa(m.Sender.ID), CheckedIn, 0)
+		GetActivityManager().redis.Set(strconv.Itoa(m.Sender.ID), CheckedIn, 0)
 		h.SetReponseMessage("Successfully checked in.")
 	}
 

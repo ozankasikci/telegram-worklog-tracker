@@ -5,6 +5,9 @@ import (
 	"log"
 	"sync"
 	"os"
+	//tb "gopkg.in/tucnak/telebot.v2"
+	"github.com/jasonlvhit/gocron"
+	"fmt"
 )
 
 var activityManager *ActivityManager
@@ -40,3 +43,16 @@ func GetActivityManager() *ActivityManager {
 	return activityManager
 }
 
+func (am *ActivityManager) Init()  {
+	//bot, _ := GetTelegramBot()
+	//
+	//user := &tb.User{
+	//	ID: 136829372,
+	//}
+
+	task := func() {
+		fmt.Println("go cron is running")
+	}
+
+	gocron.Every(1).Seconds().Do(task)
+}
