@@ -38,7 +38,7 @@ func NewBalanceHandler() *Handler {
 			totalHours += 1
 		}
 
-		h.SetReponseMessage(fmt.Sprintf(paymentsSnippet, totalHours, totalHours*hourlyPay))
+		h.SetResponseMessage(fmt.Sprintf(paymentsSnippet, totalHours, totalHours*hourlyPay))
 	}
 
 	return &Handler{

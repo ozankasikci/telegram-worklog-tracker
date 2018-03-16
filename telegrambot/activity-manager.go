@@ -1,15 +1,21 @@
 package telegrambot
 
 import (
-	"github.com/go-redis/redis"
-	"log"
-	"sync"
-	"os"
 	"fmt"
-	"time"
-	"strconv"
+	"github.com/go-redis/redis"
 	"github.com/jasonlvhit/gocron"
 	"gopkg.in/tucnak/telebot.v2"
+	"log"
+	"os"
+	"strconv"
+	"sync"
+	"time"
+)
+
+const (
+	ActiveTimeout    = 1
+	WorklogThreshold = 1
+	LoopTime         = 1
 )
 
 var activityManager *ActivityManager
@@ -33,7 +39,7 @@ func GetActivityManager() *ActivityManager {
 		if os.Getenv("REDIS_HOST") != "" {
 			redisHost = os.Getenv("REDIS_HOST")
 		}
-		
+
 		redis := redis.NewClient(&redis.Options{
 			Addr:     redisHost + ":6379",
 			Password: "", // no password set
@@ -53,9 +59,10 @@ func GetActivityManager() *ActivityManager {
 	return activityManager
 }
 
-func (am *ActivityManager) Init()  {
+func (am *ActivityManager) Init() {
 	task := func() {
 		activeUsers, err := am.redis.SMembers("active_users").Result()
+		fmt.Println("Active users: %v", activeUsers)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -65,25 +72,66 @@ func (am *ActivityManager) Init()  {
 			bot, _ := GetTelegramBot()
 			id, _ := strconv.Atoi(userId)
 
-			user := &telebot.User{ ID: id }
-			bot.Send(user, "Are you still here? Answer /here")
+			user := &telebot.User{ID: id}
+			userHash := am.GetUserHashAll(id)
+
+			lastCheckinDate, _ := time.Parse(time.RFC3339, userHash["lastCheckinDate"])
+			lastPingDate, _ := time.Parse(time.RFC3339, userHash["lastPingDate"])
+			lastPongDate, _ := time.Parse(time.RFC3339, userHash["lastPongDate"])
+
+			// time is up, clear user cache
+			if lastPingDate.IsZero() == false && time.Since(lastPingDate).Minutes() >= ActiveTimeout {
+				am.RemoveFromActiveUsers(id)
+				bot.Send(user, "You are at the idle state now. When you are back please don't forget to checkin.")
+			} else if lastPingDate.IsZero() &&
+				time.Since(lastCheckinDate).Minutes() > WorklogThreshold &&
+				(lastPongDate.IsZero() || time.Since(lastPongDate).Minutes() >= WorklogThreshold) {
+
+				bot.Send(user, "Are you still here? Answer /here")
+				am.CacheLastPingDate(id)
+			}
 		}
 	}
 
-	gocron.Every(30).Minutes().Do(task)
+	gocron.Every(LoopTime).Minute().Do(task)
 }
 
-func (am *ActivityManager) AddToActiveUsers(userId int)  {
+func (am *ActivityManager) AddToActiveUsers(userId int) {
 	fmt.Println("adding to active users user")
 	am.redis.SAdd("active_users", userId)
 }
 
-func (am *ActivityManager) RemoveFromActiveUsers(userId int)  {
+func (am *ActivityManager) RemoveFromActiveUsers(userId int) {
 	am.redis.SRem("active_users", userId)
-	am.redis.Del(GetUserKey(userId))
+	am.ClearUserHash(userId)
 }
 
-func (am *ActivityManager) CacheUser(userId int) {
-	fmt.Println("caching user")
-	am.redis.HSetNX(GetUserKey(userId), "lastCheckinDate", time.Now().String())
+func (am *ActivityManager) GetUserHashField(userId int, field string) string {
+	res, _ := am.redis.HGet(GetUserKey(userId), field).Result()
+	return res
+}
+
+func (am *ActivityManager) DelUserHashField(userId int, field string) {
+	am.redis.HDel(GetUserKey(userId), field)
+}
+
+func (am *ActivityManager) GetUserHashAll(userId int) map[string]string {
+	res, _ := am.redis.HGetAll(GetUserKey(userId)).Result()
+	return res
+}
+
+func (am *ActivityManager) CacheLastPingDate(userId int) {
+	am.redis.HSet(GetUserKey(userId), "lastPingDate", time.Now().Format(time.RFC3339))
+}
+
+func (am *ActivityManager) CacheLastPongDate(userId int) {
+	am.redis.HSet(GetUserKey(userId), "lastPongDate", time.Now().Format(time.RFC3339))
+}
+
+func (am *ActivityManager) CacheLastCheckinDate(userId int) {
+	am.redis.HSetNX(GetUserKey(userId), "lastCheckinDate", time.Now().Format(time.RFC3339))
+}
+
+func (am *ActivityManager) ClearUserHash(userId int) {
+	am.redis.Del(GetUserKey(userId))
 }

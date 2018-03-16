@@ -12,7 +12,7 @@ type Handler struct {
 	ResponseMessage string
 }
 
-func (h *Handler) SetReponseMessage(m string) {
+func (h *Handler) SetResponseMessage(m string) {
 	h.ResponseMessage = m
 }
 
@@ -25,6 +25,7 @@ func GetHandlers() []*Handler {
 		NewCheckoutHandler(),
 		NewWorkLogsHandler(),
 		NewBalanceHandler(),
+		NewPongHandler(),
 	)
 
 	return handlers

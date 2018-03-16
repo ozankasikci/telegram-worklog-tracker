@@ -5,23 +5,28 @@ import (
 	"github.com/ozankasikci/apollo-telegram-tracker/firebase"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"log"
-	"strconv"
-	"time"
+	"os"
 	"sync"
+	"time"
+	"fmt"
 )
 
-var bot  *tb.Bot
+var bot *tb.Bot
 var once sync.Once
 
 func FindOrCreateUser(ctx context.Context, m *tb.Message) {
 	db := firebase.GetFirestoreClient(ctx)
-	userSnapshot, err := db.Doc(strconv.Itoa(m.Sender.ID)).Get(ctx)
+	userSnapshot, err := db.Collection("users").
+		Where("id", "==", m.Sender.ID).
+		Documents(ctx).
+		Next()
 
 	if err != nil {
-		println(err)
+		fmt.Println("%v", err)
 	}
 
 	if userSnapshot == nil {
+		fmt.Println("Creating user on firebase, user id:%d", m.Sender.ID)
 		db.Collection("users").Add(ctx, map[string]interface{}{
 			"id":       m.Sender.ID,
 			"username": m.Sender.Username,
@@ -38,7 +43,6 @@ func RegisterHandlers(ctx context.Context, b *tb.Bot) {
 		b.Handle(handler.Route, func(m *tb.Message) {
 			// before each request, ensure user saved
 			FindOrCreateUser(ctx, m)
-			GetActivityManager().redis.SetNX("chat_id", m.Chat.ID, 0)
 
 			// run handler logic
 			handler.Func(ctx, handler, m)
@@ -56,12 +60,13 @@ func RegisterHandlers(ctx context.Context, b *tb.Bot) {
 	}
 }
 
-func GetTelegramBot() (*tb.Bot, error){
+func GetTelegramBot() (*tb.Bot, error) {
 	var err error
 
 	once.Do(func() {
+		token := os.Getenv("TELEGRAM_TOKEN")
 		bot, err = tb.NewBot(tb.Settings{
-			Token:  "492394305:AAEGTfMTO2qxqqa7BGkuhvzLgnHeA7Ek7C4",
+			Token:  token,
 			Poller: &tb.LongPoller{Timeout: 10 * time.Second},
 		})
 	})

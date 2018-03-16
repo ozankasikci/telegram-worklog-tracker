@@ -2,23 +2,17 @@ package main
 
 import (
 	"context"
-	"github.com/ozankasikci/apollo-telegram-tracker/firebase"
-	"github.com/ozankasikci/apollo-telegram-tracker/telegrambot"
 	"github.com/jasonlvhit/gocron"
+	"github.com/ozankasikci/apollo-telegram-tracker/telegrambot"
 )
 
 func main() {
 	ctx := context.Background()
-	go telegrambot.InitTelegramBot(ctx)
-
-	db := firebase.GetFirestoreClient(ctx)
-	defer db.Close()
 
 	activityManager := telegrambot.GetActivityManager()
 	activityManager.Init()
 
-	<- gocron.Start()
+	<-gocron.Start()
 
-	done := make(chan bool)
-	<-done
+	telegrambot.InitTelegramBot(ctx)
 }

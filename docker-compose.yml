@@ -8,6 +8,7 @@ services:
       - redis
     environment:
       - REDIS_HOST=redis
+      - TELEGRAM_TOKEN
     links:
       - redis
   redis:

@@ -15,8 +15,8 @@ func NewCheckinHandler() *Handler {
 	function := func(ctx context.Context, h *Handler, m *tb.Message) {
 		activityManager := GetActivityManager()
 		activityManager.AddToActiveUsers(m.Sender.ID)
-		activityManager.CacheUser(m.Sender.ID)
-		h.SetReponseMessage("Successfully checked in.")
+		activityManager.CacheLastCheckinDate(m.Sender.ID)
+		h.SetResponseMessage("Successfully checked in.")
 	}
 
 	return &Handler{

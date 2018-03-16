@@ -28,7 +28,7 @@ func NewWorkLogsHandler() *Handler {
 			response = response + fmt.Sprintf(workhourSnippet, data["checkin_time"], data["checkout_time"])
 		}
 
-		h.SetReponseMessage(response)
+		h.SetResponseMessage(response)
 	}
 
 	return &Handler{
