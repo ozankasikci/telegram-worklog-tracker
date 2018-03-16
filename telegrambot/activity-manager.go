@@ -5,9 +5,11 @@ import (
 	"log"
 	"sync"
 	"os"
-	//tb "gopkg.in/tucnak/telebot.v2"
-	"github.com/jasonlvhit/gocron"
 	"fmt"
+	"time"
+	"strconv"
+	"github.com/jasonlvhit/gocron"
+	"gopkg.in/tucnak/telebot.v2"
 )
 
 var activityManager *ActivityManager
@@ -15,6 +17,14 @@ var redisOnce sync.Once
 
 type ActivityManager struct {
 	redis *redis.Client
+}
+
+type CacheUserOptions struct {
+	lastCheckInDate time.Time
+}
+
+func GetUserKey(userId int) string {
+	return "users:" + strconv.Itoa(userId)
 }
 
 func GetActivityManager() *ActivityManager {
@@ -44,15 +54,36 @@ func GetActivityManager() *ActivityManager {
 }
 
 func (am *ActivityManager) Init()  {
-	//bot, _ := GetTelegramBot()
-	//
-	//user := &tb.User{
-	//	ID: 136829372,
-	//}
-
 	task := func() {
-		fmt.Println("go cron is running")
+		activeUsers, err := am.redis.SMembers("active_users").Result()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		for i := 0; i < len(activeUsers); i++ {
+			userId := activeUsers[i]
+			bot, _ := GetTelegramBot()
+			id, _ := strconv.Atoi(userId)
+
+			user := &telebot.User{ ID: id }
+			bot.Send(user, "Are you still here? Answer /here")
+		}
 	}
 
-	gocron.Every(1).Seconds().Do(task)
+	gocron.Every(30).Minutes().Do(task)
+}
+
+func (am *ActivityManager) AddToActiveUsers(userId int)  {
+	fmt.Println("adding to active users user")
+	am.redis.SAdd("active_users", userId)
+}
+
+func (am *ActivityManager) RemoveFromActiveUsers(userId int)  {
+	am.redis.SRem("active_users", userId)
+	am.redis.Del(GetUserKey(userId))
+}
+
+func (am *ActivityManager) CacheUser(userId int) {
+	fmt.Println("caching user")
+	am.redis.HSetNX(GetUserKey(userId), "lastCheckinDate", time.Now().String())
 }

@@ -38,6 +38,7 @@ func RegisterHandlers(ctx context.Context, b *tb.Bot) {
 		b.Handle(handler.Route, func(m *tb.Message) {
 			// before each request, ensure user saved
 			FindOrCreateUser(ctx, m)
+			GetActivityManager().redis.SetNX("chat_id", m.Chat.ID, 0)
 
 			// run handler logic
 			handler.Func(ctx, handler, m)

@@ -7,6 +7,7 @@ import (
 	"github.com/ozankasikci/apollo-telegram-tracker/firebase"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"time"
+	"log"
 )
 
 func NewCheckoutHandler() *Handler {
@@ -27,7 +28,7 @@ func NewCheckoutHandler() *Handler {
 		}
 
 		if len(lastWorkLogSP) == 0 {
-			println("No work log found")
+			fmt.Println("No work log found")
 			return
 		}
 
@@ -39,8 +40,11 @@ func NewCheckoutHandler() *Handler {
 		})
 
 		if err != nil {
-			println(err)
+			log.Println(err)
 		}
+
+		activityManager := GetActivityManager()
+		activityManager.RemoveFromActiveUsers(m.Sender.ID)
 	}
 
 	return &Handler{
