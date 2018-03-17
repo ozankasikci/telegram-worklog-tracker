@@ -3,7 +3,6 @@ package telegrambot
 import (
 	"fmt"
 	"github.com/go-redis/redis"
-	"github.com/jasonlvhit/gocron"
 	"gopkg.in/tucnak/telebot.v2"
 	"log"
 	"os"
@@ -93,7 +92,20 @@ func (am *ActivityManager) Init() {
 		}
 	}
 
-	gocron.Every(LoopTime).Minute().Do(task)
+	// continuously check if users are active
+	ticker := time.NewTicker(LoopTime * time.Minute)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <- ticker.C:
+				task()
+			case <- quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 }
 
 func (am *ActivityManager) AddToActiveUsers(userId int) {

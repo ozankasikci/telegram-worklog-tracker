@@ -67,7 +67,7 @@ func GetTelegramBot() (*tb.Bot, error) {
 		token := os.Getenv("TELEGRAM_TOKEN")
 		bot, err = tb.NewBot(tb.Settings{
 			Token:  token,
-			Poller: &tb.LongPoller{Timeout: 10 * time.Second},
+			Poller: &tb.LongPoller{Timeout: 60 * time.Second},
 		})
 	})
 
