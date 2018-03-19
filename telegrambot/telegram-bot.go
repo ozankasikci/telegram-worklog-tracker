@@ -63,6 +63,10 @@ func RegisterHandlers(ctx context.Context, b *tb.Bot) {
 func GetTelegramBot() (*tb.Bot, error) {
 	var err error
 
+	if os.Getenv("TELEGRAM_TOKEN") == "" {
+		log.Fatalln("Please set TELEGRAM_TOKEN env var")
+	}
+
 	once.Do(func() {
 		token := os.Getenv("TELEGRAM_TOKEN")
 		bot, err = tb.NewBot(tb.Settings{
@@ -76,12 +80,14 @@ func GetTelegramBot() (*tb.Bot, error) {
 
 func InitTelegramBot(ctx context.Context) {
 	b, err := GetTelegramBot()
-	RegisterHandlers(ctx, b)
 
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
+
+	RegisterHandlers(ctx, b)
+
 
 	b.Start()
 }

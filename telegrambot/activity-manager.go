@@ -81,7 +81,7 @@ func (am *ActivityManager) Init() {
 			// time is up, clear user cache
 			if lastPingDate.IsZero() == false && time.Since(lastPingDate).Minutes() >= ActiveTimeout {
 				am.RemoveFromActiveUsers(id)
-				bot.Send(user, "You are at the idle state now. When you are back please don't forget to checkin.")
+				bot.Send(user, "Don't forget to check in if you haven't already!")
 			} else if lastPingDate.IsZero() &&
 				time.Since(lastCheckinDate).Minutes() > WorklogThreshold &&
 				(lastPongDate.IsZero() || time.Since(lastPongDate).Minutes() >= WorklogThreshold) {
