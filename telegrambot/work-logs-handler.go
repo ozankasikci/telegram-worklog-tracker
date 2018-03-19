@@ -8,8 +8,7 @@ import (
 )
 
 var workhourSnippet = `
-*checkin:* %s
-*checkout:* %s
+*Work Log Created at:* %s
 `
 
 func NewWorkLogsHandler() *Handler {
@@ -25,7 +24,7 @@ func NewWorkLogsHandler() *Handler {
 
 		for i := 0; i < len(workLogsSnapshot); i++ {
 			data := workLogsSnapshot[i].Data()
-			response = response + fmt.Sprintf(workhourSnippet, data["checkin_time"], data["checkout_time"])
+			response = response + fmt.Sprintf(workhourSnippet, data["created_at"])
 		}
 
 		h.SetResponseMessage(response)
@@ -33,7 +32,7 @@ func NewWorkLogsHandler() *Handler {
 
 	return &Handler{
 		Description: "Work Log handler",
-		Route:       "/work_log",
+		Route:       "/worklog",
 		Func:        function,
 	}
 

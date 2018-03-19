@@ -17,7 +17,7 @@ func NewCheckinHandler() *Handler {
 		activityManager := GetActivityManager()
 		activityManager.AddToActiveUsers(m.Sender.ID)
 		activityManager.CacheLastCheckinDate(m.Sender.ID)
-		h.SetResponseMessage("Successfully checked in.")
+		h.SetResponseMessage("Successfully checked in. (type /commands to see available commands)")
 	}
 
 	return &Handler{

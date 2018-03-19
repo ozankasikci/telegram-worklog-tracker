@@ -26,6 +26,7 @@ func GetHandlers() []*Handler {
 		NewWorkLogsHandler(),
 		NewBalanceHandler(),
 		NewPongHandler(),
+		NewCommandsHandler(),
 	)
 
 	return handlers
