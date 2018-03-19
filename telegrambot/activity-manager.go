@@ -66,6 +66,7 @@ func (am *ActivityManager) Init() {
 			log.Fatalln(err)
 		}
 
+		// ask user if they are stil, if not, remove them from active users
 		for i := 0; i < len(activeUsers); i++ {
 			userId := activeUsers[i]
 			bot, _ := GetTelegramBot()
