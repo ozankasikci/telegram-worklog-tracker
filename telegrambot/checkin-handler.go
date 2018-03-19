@@ -13,7 +13,7 @@ const (
 
 func NewCheckinHandler() *Handler {
 	function := func(ctx context.Context, h *Handler, m *tb.Message) {
-		println("calling check in handler func")
+		FindOrCreateUser(ctx, m)
 		activityManager := GetActivityManager()
 		activityManager.AddToActiveUsers(m.Sender.ID)
 		activityManager.CacheLastCheckinDate(m.Sender.ID)

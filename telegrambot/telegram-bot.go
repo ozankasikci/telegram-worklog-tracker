@@ -30,6 +30,7 @@ func FindOrCreateUser(ctx context.Context, m *tb.Message) {
 		db.Collection("users").Add(ctx, map[string]interface{}{
 			"id":       m.Sender.ID,
 			"username": m.Sender.Username,
+			"created_at": time.Now().Format(time.RFC3339),
 		})
 	}
 }
@@ -41,9 +42,6 @@ func RegisterHandlers(ctx context.Context, b *tb.Bot) {
 		handler := handlers[i]
 
 		b.Handle(handler.Route, func(m *tb.Message) {
-			// before each request, ensure user saved
-			FindOrCreateUser(ctx, m)
-
 			// run handler logic
 			handler.Func(ctx, handler, m)
 

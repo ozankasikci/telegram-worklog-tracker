@@ -31,7 +31,7 @@ func NewWorkLogsHandler() *Handler {
 	}
 
 	return &Handler{
-		Description: "Work Log handler",
+		Description: "No work logs yet!",
 		Route:       "/worklog",
 		Func:        function,
 	}
