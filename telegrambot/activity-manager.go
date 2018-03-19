@@ -59,14 +59,8 @@ func GetActivityManager() *ActivityManager {
 }
 
 func (am *ActivityManager) Init() {
-	task := func() {
-		activeUsers, err := am.redis.SMembers("active_users").Result()
-		fmt.Println("Active users: %v", activeUsers)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		// ask user if they are stil, if not, remove them from active users
+	// ask user if they are stil, if not, remove them from active users
+	pingUsers := func(activeUsers []string) {
 		for i := 0; i < len(activeUsers); i++ {
 			userId := activeUsers[i]
 			bot, _ := GetTelegramBot()
@@ -82,7 +76,6 @@ func (am *ActivityManager) Init() {
 			// time is up, clear user cache
 			if lastPingDate.IsZero() == false && time.Since(lastPingDate).Minutes() >= ActiveTimeout {
 				am.RemoveFromActiveUsers(id)
-				bot.Send(user, "Don't forget to check in if you haven't already!")
 			} else if lastPingDate.IsZero() &&
 				time.Since(lastCheckinDate).Minutes() > WorklogThreshold &&
 				(lastPongDate.IsZero() || time.Since(lastPongDate).Minutes() >= WorklogThreshold) {
@@ -93,9 +86,20 @@ func (am *ActivityManager) Init() {
 		}
 	}
 
+	task := func() {
+		activeUsers, err := am.redis.SMembers("active_users").Result()
+		fmt.Println("Active users: %v", activeUsers)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		pingUsers(activeUsers)
+	}
+
 	// continuously check if users are active
 	ticker := time.NewTicker(LoopTime * time.Minute)
 	quit := make(chan struct{})
+
 	go func() {
 		for {
 			select {
