@@ -3,12 +3,14 @@ package telegrambot
 import (
 	"fmt"
 	"github.com/go-redis/redis"
-	"gopkg.in/tucnak/telebot.v2"
+	tb "gopkg.in/tucnak/telebot.v2"
 	"log"
 	"os"
 	"strconv"
 	"sync"
 	"time"
+	"context"
+	"golang.org/x/tools/go/gcimporter15/testdata"
 )
 
 const (
@@ -58,15 +60,39 @@ func GetActivityManager() *ActivityManager {
 	return activityManager
 }
 
-func (am *ActivityManager) Init() {
+func sendInlinePingButton(ctx context.Contextl, b *tb.Bot, user *tb.User) {
+	inlineBtn := tb.InlineButton{
+		Unique: "iamhere",
+		Text:   "I'm here!",
+	}
+
+	inlineKeys := [][]tb.InlineButton{
+		[]tb.InlineButton{inlineBtn},
+	}
+
+	b.Handle(&inlineBtn, func(c *tb.Callback) {
+		m := &tb.Message{Sender: user}
+		PongHandlerFunction(ctx, nil, m)
+
+		// always respond!
+		b.Respond(c, &tb.CallbackResponse{Text: "Thank you!"})
+	})
+
+	b.Send(user, "Are you still here?", &tb.ReplyMarkup{
+		InlineKeyboard: inlineKeys,
+	})
+
+}
+
+func (am *ActivityManager) Init(ctx context.Context) {
 	// ask user if they are stil, if not, remove them from active users
 	pingUsers := func(activeUsers []string) {
 		for i := 0; i < len(activeUsers); i++ {
 			userId := activeUsers[i]
-			bot, _ := GetTelegramBot()
+			b, _ := GetTelegramBot()
 			id, _ := strconv.Atoi(userId)
 
-			user := &telebot.User{ID: id}
+			user := &tb.User{ID: id}
 			userHash := am.GetUserHashAll(id)
 
 			lastCheckinDate, _ := time.Parse(time.RFC3339, userHash["lastCheckinDate"])
@@ -80,7 +106,7 @@ func (am *ActivityManager) Init() {
 				time.Since(lastCheckinDate).Minutes() > WorklogThreshold &&
 				(lastPongDate.IsZero() || time.Since(lastPongDate).Minutes() >= WorklogThreshold) {
 
-				bot.Send(user, "Are you still here? Answer /here")
+				sendInlinePingButton(ctx, b, user)
 				am.CacheLastPingDate(id)
 			}
 		}
@@ -103,9 +129,9 @@ func (am *ActivityManager) Init() {
 	go func() {
 		for {
 			select {
-			case <- ticker.C:
+			case <-ticker.C:
 				task()
-			case <- quit:
+			case <-quit:
 				ticker.Stop()
 				return
 			}

@@ -2,13 +2,13 @@ package telegrambot
 
 import (
 	"context"
+	"fmt"
 	"github.com/ozankasikci/apollo-telegram-tracker/firebase"
 	tb "gopkg.in/tucnak/telebot.v2"
 	"log"
 	"os"
 	"sync"
 	"time"
-	"fmt"
 )
 
 var bot *tb.Bot
@@ -28,8 +28,8 @@ func FindOrCreateUser(ctx context.Context, m *tb.Message) {
 	if userSnapshot == nil {
 		fmt.Println("Creating user on firebase, user id:%d", m.Sender.ID)
 		db.Collection("users").Add(ctx, map[string]interface{}{
-			"id":       m.Sender.ID,
-			"username": m.Sender.Username,
+			"id":         m.Sender.ID,
+			"username":   m.Sender.Username,
 			"created_at": time.Now().Format(time.RFC3339),
 		})
 	}
@@ -85,7 +85,6 @@ func InitTelegramBot(ctx context.Context) {
 	}
 
 	RegisterHandlers(ctx, b)
-
 
 	b.Start()
 }

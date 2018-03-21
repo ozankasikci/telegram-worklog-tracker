@@ -9,7 +9,7 @@ func main() {
 	ctx := context.Background()
 
 	activityManager := telegrambot.GetActivityManager()
-	activityManager.Init()
+	activityManager.Init(ctx)
 
 	telegrambot.InitTelegramBot(ctx)
 }

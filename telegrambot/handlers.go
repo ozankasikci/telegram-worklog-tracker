@@ -27,6 +27,7 @@ func GetHandlers() []*Handler {
 		NewBalanceHandler(),
 		NewPongHandler(),
 		NewCommandsHandler(),
+		NewStartHandler(),
 	)
 
 	return handlers
