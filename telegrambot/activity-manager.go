@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 	"context"
-	"golang.org/x/tools/go/gcimporter15/testdata"
 )
 
 const (
@@ -41,14 +40,14 @@ func GetActivityManager() *ActivityManager {
 			redisHost = os.Getenv("REDIS_HOST")
 		}
 
-		redis := redis.NewClient(&redis.Options{
+		r := redis.NewClient(&redis.Options{
 			Addr:     redisHost + ":6379",
 			Password: "", // no password set
 			DB:       0,  // use default DB
 		})
 
 		activityManager = &ActivityManager{
-			redis: redis,
+			redis: r,
 		}
 	})
 
@@ -60,7 +59,7 @@ func GetActivityManager() *ActivityManager {
 	return activityManager
 }
 
-func sendInlinePingButton(ctx context.Contextl, b *tb.Bot, user *tb.User) {
+func sendInlinePingButton(ctx context.Context, b *tb.Bot, user *tb.User) {
 	inlineBtn := tb.InlineButton{
 		Unique: "iamhere",
 		Text:   "I'm here!",
