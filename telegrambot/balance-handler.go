@@ -45,7 +45,6 @@ func BalanceHandlerFunction(ctx context.Context, h *Handler, m *tb.Message) {
 	}
 
 	h.SetResponseMessage(fmt.Sprintf(paymentsSnippet, totalMinutes, totalMinutes*paymentPerMinute))
-	fmt.Println(h.ResponseMessage)
 }
 
 func NewBalanceHandler() *Handler {
