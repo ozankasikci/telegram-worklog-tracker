@@ -110,7 +110,7 @@ func (am *ActivityManager) Init(ctx context.Context) {
 					continue
 				}
 
-				minutes := lastCheckinDate.Sub(lastPongDate).Minutes()
+				minutes := lastPongDate.Sub(lastCheckinDate).Minutes()
 				minutesInt := int(minutes)
 				wlo := &firebase.WorkLogsOptions{Minutes: minutesInt, UserID: id}
 				am.CreateWorkLog(ctx, wlo)
