@@ -10,10 +10,11 @@ import (
 	"sync"
 	"time"
 	"context"
+	"github.com/ozankasikci/apollo-telegram-tracker/firebase"
 )
 
 const (
-	ActiveTimeout    = 1
+	ActiveTimeout    = 3
 	WorklogThreshold = 1
 	LoopTime         = 1
 )
@@ -83,6 +84,10 @@ func sendInlinePingButton(ctx context.Context, b *tb.Bot, user *tb.User) {
 
 }
 
+func (am *ActivityManager ) CreateWorkLog(ctx context.Context, wlo *firebase.WorkLogsOptions)  {
+	firebase.CreateWorkLog(ctx, wlo)
+}
+
 func (am *ActivityManager) Init(ctx context.Context) {
 	// ask user if they are stil, if not, remove them from active users
 	pingUsers := func(activeUsers []string) {
@@ -100,6 +105,15 @@ func (am *ActivityManager) Init(ctx context.Context) {
 
 			// time is up, clear user cache
 			if lastPingDate.IsZero() == false && time.Since(lastPingDate).Minutes() >= ActiveTimeout {
+				if lastPongDate.IsZero() == true {
+					am.RemoveFromActiveUsers(id)
+					continue
+				}
+
+				minutes := lastCheckinDate.Sub(lastPongDate).Minutes()
+				minutesInt := int(minutes)
+				wlo := &firebase.WorkLogsOptions{Minutes: minutesInt, UserID: id}
+				am.CreateWorkLog(ctx, wlo)
 				am.RemoveFromActiveUsers(id)
 			} else if lastPingDate.IsZero() &&
 				time.Since(lastCheckinDate).Minutes() > WorklogThreshold &&
@@ -139,11 +153,12 @@ func (am *ActivityManager) Init(ctx context.Context) {
 }
 
 func (am *ActivityManager) AddToActiveUsers(userId int) {
-	fmt.Println("adding to active users user")
+	fmt.Println("Adding to active users, %d", userId)
 	am.redis.SAdd("active_users", userId)
 }
 
 func (am *ActivityManager) RemoveFromActiveUsers(userId int) {
+	fmt.Println("Removing from active users, %d", userId)
 	am.redis.SRem("active_users", userId)
 	am.ClearUserHash(userId)
 }
@@ -170,8 +185,8 @@ func (am *ActivityManager) CacheLastPongDate(userId int) {
 	am.redis.HSet(GetUserKey(userId), "lastPongDate", time.Now().Format(time.RFC3339))
 }
 
-func (am *ActivityManager) CacheLastCheckinDate(userId int) {
-	am.redis.HSetNX(GetUserKey(userId), "lastCheckinDate", time.Now().Format(time.RFC3339))
+func (am *ActivityManager) CacheLastCheckinDate(userId int) bool {
+	return am.redis.HSetNX(GetUserKey(userId), "lastCheckinDate", time.Now().Format(time.RFC3339)).Val()
 }
 
 func (am *ActivityManager) ClearUserHash(userId int) {

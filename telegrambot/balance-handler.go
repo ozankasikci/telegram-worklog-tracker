@@ -9,7 +9,7 @@ import (
 )
 
 var paymentsSnippet = `
-*Total Hours:* %d
+*Total Minutes:* %d
 *Total DAE Earned:* %d
 `
 
@@ -26,18 +26,26 @@ func BalanceHandlerFunction(ctx context.Context, h *Handler, m *tb.Message) {
 	}
 
 	config := configSnapshot.Data()
-	hourlyPay, ok := config["hourly_pay"].(int64)
+	paymentPerMinute, ok := config["payment_per_minute"].(int64)
 	if !ok {
-		log.Printf("got data of type %T but wanted int64", hourlyPay)
+		log.Printf("got data of type %T but wanted int64", paymentPerMinute)
 	}
 
-	var totalHours int64
-	totalHours = 0
+	var totalMinutes int64
+	totalMinutes = 0
 	for i := 0; i < len(workLogsSnapshots); i++ {
-		totalHours += 1
+		snapshot := workLogsSnapshots[i]
+		data := snapshot.Data()
+		minutesInt, ok := data["minutes"].(int64)
+		if !ok {
+			log.Printf("got data of type %T but wanted int64", minutesInt)
+		}
+
+		totalMinutes += minutesInt
 	}
 
-	h.SetResponseMessage(fmt.Sprintf(paymentsSnippet, totalHours, totalHours*hourlyPay))
+	h.SetResponseMessage(fmt.Sprintf(paymentsSnippet, totalMinutes, totalMinutes*paymentPerMinute))
+	fmt.Println(h.ResponseMessage)
 }
 
 func NewBalanceHandler() *Handler {

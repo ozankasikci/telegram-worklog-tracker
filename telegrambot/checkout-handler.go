@@ -3,12 +3,22 @@ package telegrambot
 import (
 	"context"
 	"fmt"
+	"github.com/ozankasikci/apollo-telegram-tracker/firebase"
 	tb "gopkg.in/tucnak/telebot.v2"
+	"time"
 )
 
 func CheckoutHandlerFunction(ctx context.Context, h *Handler, m *tb.Message) {
-	activityManager := GetActivityManager()
-	activityManager.RemoveFromActiveUsers(m.Sender.ID)
+	am := GetActivityManager()
+	userHash := am.GetUserHashAll(m.Sender.ID)
+	lastCheckinDate, _ := time.Parse(time.RFC3339, userHash["lastCheckinDate"])
+
+	minutes := time.Since(lastCheckinDate).Minutes()
+	minutesInt := int(minutes)
+	wlo := &firebase.WorkLogsOptions{Minutes: minutesInt, UserID: m.Sender.ID}
+	am.CreateWorkLog(ctx, wlo)
+
+	am.RemoveFromActiveUsers(m.Sender.ID)
 	fmt.Println("Checking out user, %d", m.Sender.ID)
 	h.SetResponseMessage("Successfully checked out.")
 }
